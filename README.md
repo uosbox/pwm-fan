@@ -2,12 +2,18 @@
 
 #### 介绍
 这是一个用ash（bash、sh）编写的类pwm调速风扇的脚本
+
 唯一依赖usleep命令，busybox有提供usleep命令，若是没有
+
 可以从[https://git.kos.org.cn/k/usleep](https://git.kos.org.cn/k/usleep)下载编译就是了
+
 效果不错
 #### 原理
+
 pwm调速（dc调速） 实际是不断的开关电源
+
 调速就是控制开与关之间的间隔时间
+
 所以这里必须用到usleep 微米级别的休眠命令
 
 风扇只需要2pin（正极、负极）
@@ -15,6 +21,7 @@ pwm调速（dc调速） 实际是不断的开关电源
 
 #### 软件架构
 本脚本理论上兼容所有Linux 系统
+
 只要能找到gpio控制的插座都可以使用
 
 
@@ -47,5 +54,5 @@ pwm调速（dc调速） 实际是不断的开关电源
 
 #### 特技
 
-1.  本脚本由https://LaJiLao.Top 提供
+1.  本脚本由 [https://LaJiLao.Top](https://LaJiLao.Top) 提供
 
