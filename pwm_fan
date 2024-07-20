@@ -1,0 +1,73 @@
+#!/bin/sh
+#本脚本由https://LaJiLao.Top 提供
+myname="${0##*\/}"
+temp_pid="$(cat /var/run/${myname}.pid 2>/dev/null)"
+get_name="$(cat /proc/$temp_pid/comm 2>/dev/null)"
+rands=$(awk '{ee==gsub(/[^0-9]/,"");print substr($ee,1,6)}' /proc/sys/kernel/random/uuid)
+busybox usleep $rands
+
+[ "$get_name" = "$myname" ]&&{
+echo "脚本已经执行，请勿重复执行……"
+exit 0
+}
+
+{
+pidof $myname >/var/run/${myname}.pid||pgrep $myname >/var/run/${myname}.pid
+ii=152 #在tpm312板子的minipci傍边的4pin座（J8917） 
+echo $ii >/sys/class/gpio/export
+echo out >/sys/class/gpio/gpio$ii/direction
+g_p=/sys/class/gpio/gpio$ii/value
+[ -r /sys/class/hwmon/hwmon0/temp1_input ]&&tempfile="/sys/class/hwmon/hwmon0/temp1_input"||{
+[ -r /sys/class/thermal/thermal_zone0/temp ]&&tempfile="/sys/class/thermal/thermal_zone0/temp"
+}
+get_dw(){
+cpu_temp=$(cat $tempfile)
+[ "$cpu_temp" = "" ]&&return 4
+[ "$cpu_temp" -le "45000" ]&&{
+[ "$pp" = "a" -a "$cpu_temp" -ge "43000" ]&&return 1||{
+pp=""
+return 9
+}
+}||{
+[ "$cpu_temp" -le "48000" -a "$cpu_temp" -gt "45000" ]&&return 1||{
+[ "$cpu_temp" -le "51000" -a "$cpu_temp" -gt "48000" ]&&return 2||{
+[ "$cpu_temp" -le "55000" -a "$cpu_temp" -gt "51000" ]&&return 3||return 4
+}
+}
+}
+}
+set_wd(){
+echo 1 >$g_p
+busybox usleep $1
+echo 0 >$g_p
+busybox usleep $2
+}
+while :
+do
+get_dw
+case $? in
+9)
+echo 0 >$g_p
+sleep 1
+;;
+1)
+pp=a
+set_wd 2500 250
+;;
+2)
+pp=a
+set_wd 10000 500
+;;
+3)
+pp=a
+set_wd 15000 300
+;;
+4)
+pp=a
+set_wd 20000 100
+echo 1 >$g_p
+sleep 1
+;;
+esac
+done
+} >/dev/null 2>&1 &
